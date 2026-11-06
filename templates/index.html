@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0908">
+<title>Harry Barber | Peluquería a domicilio</title>
+<style>
+:root{--bg:#090909;--panel:#141310;--gold:#d7ad60;--gold2:#f4d89a;--muted:#b8b1a5;--line:rgba(215,173,96,.25);--white:#f8f5ef}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 75% 10%,rgba(174,122,45,.13),transparent 36%),radial-gradient(ellipse at 10% 70%,rgba(174,122,45,.08),transparent 30%)}
+a{color:inherit;text-decoration:none}.wrap{width:min(1160px,92%);margin:auto}.gold{color:var(--gold2)}.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold2);font-size:.76rem;letter-spacing:.19em;text-transform:uppercase;font-weight:800}.eyebrow:before{content:"";width:24px;height:1px;background:var(--gold)}
+header{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.84);backdrop-filter:blur(16px);border-bottom:1px solid rgba(215,173,96,.15)}
+.nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:.08em}.brand-mark{width:40px;height:40px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold2);font-family:Georgia,serif;font-size:1.3rem;box-shadow:inset 0 0 0 4px rgba(215,173,96,.08)}.brand small{display:block;font-size:.58rem;color:var(--gold);letter-spacing:.28em;margin-top:2px}.navlinks{display:flex;align-items:center;gap:27px;color:#d7d1c6;font-size:.9rem}.navlinks a:hover{color:var(--gold2)}.btn{display:inline-flex;justify-content:center;align-items:center;gap:9px;border:0;border-radius:999px;padding:14px 21px;background:linear-gradient(135deg,#f3d79a,#bd873b);color:#17110a;font-weight:900;cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 7px 24px rgba(215,173,96,.15)}.btn:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(215,173,96,.27)}.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold2);box-shadow:none}
+.hero{min-height:650px;display:grid;grid-template-columns:1.02fr .98fr;gap:45px;align-items:center;padding:65px 0 75px;position:relative}.hero-copy{animation:rise .8s both}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.4rem,7vw,6.4rem);line-height:.92;letter-spacing:-.055em;margin:22px 0}.hero h1 span{display:block;color:var(--gold2);font-style:italic;font-weight:500}.hero p{max-width:510px;color:#c7c0b4;font-size:1.08rem;line-height:1.8}.hero-actions{display:flex;gap:13px;flex-wrap:wrap;margin-top:28px}.proof{display:flex;gap:24px;margin-top:40px;flex-wrap:wrap}.proof div{border-left:2px solid var(--gold);padding-left:12px}.proof strong{display:block;font-size:1.2rem}.proof small{color:var(--muted)}
+.hero-art{position:relative;animation:floatIn 1s .1s both}.poster-frame{position:relative;border:1px solid var(--gold);padding:9px;border-radius:230px 230px 28px 28px;background:linear-gradient(135deg,rgba(215,173,96,.25),rgba(255,255,255,.02));box-shadow:0 35px 100px #000,0 0 65px rgba(215,173,96,.12);overflow:hidden;max-width:470px;margin:auto;height:600px;}
+/* CARRUSEL FADE + ZOOM (Ken Burns) */
+.carousel-inner {position: relative; width: 100%; height: 100%; border-radius: 220px 220px 20px 20px; overflow: hidden;}
+.carousel-inner img {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+    object-fit: cover; opacity: 0; 
+    transition: opacity 2.5s ease-in-out; 
+    filter: saturate(.86);
+    transform: scale(1);
+}
+.carousel-inner img.active {
+    opacity: 1;
+    animation: kenburns 8s ease-out forwards; 
+}
+@keyframes kenburns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.15); } 
+}
+.poster-frame:before{content:"";position:absolute;inset:17px;border:1px solid rgba(244,216,154,.55);border-radius:220px 220px 20px 20px;pointer-events:none;z-index:2;}
+.orbit{position:absolute;width:105px;height:105px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;text-align:center;background:#11100de8;color:var(--gold2);font-size:.68rem;letter-spacing:.1em;line-height:1.5;right:-8px;bottom:55px;animation:float 4s ease-in-out infinite;z-index:3;}.orbit b{font-size:1.5rem;display:block}.spark{position:absolute;color:var(--gold2);animation:twinkle 2.4s infinite}.spark.one{top:10%;left:3%;font-size:1.6rem}.spark.two{top:27%;right:2%;font-size:1.1rem;animation-delay:.7s}
+section{padding:82px 0}.section-head{text-align:center;max-width:670px;margin:0 auto 40px}.section-head h2{font:500 clamp(2.4rem,5vw,4rem)/1.05 Georgia,serif;margin:14px 0}.section-head p{color:var(--muted);line-height:1.7}.services{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}.service{padding:28px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#171612,#0e0e0d);transition:transform .25s,border-color .25s}.service:hover{transform:translateY(-7px);border-color:var(--gold)}.service-icon{font-size:1.7rem;width:54px;height:54px;display:grid;place-items:center;border-radius:16px;background:rgba(215,173,96,.1);margin-bottom:21px}.service h3{margin:0 0 10px;font-size:1.2rem}.service p{color:var(--muted);line-height:1.65;font-size:.94rem}.price{font-size:1.5rem;color:var(--gold2);font-weight:800;margin-top:18px}.price small{font-size:.75rem;color:var(--muted);font-weight:500}
+.booking-section{background:linear-gradient(180deg,transparent,rgba(215,173,96,.045),transparent)}.booking-layout{display:grid;grid-template-columns:1fr .9fr;gap:24px;align-items:start}.booking-card,.info-card{border:1px solid var(--line);border-radius:24px;background:#12110f;padding:clamp(20px,4vw,34px);box-shadow:0 18px 60px #0005}.booking-card h3,.info-card h3{font:500 1.8rem Georgia,serif;margin:0 0 8px}.sub{color:var(--muted);font-size:.9rem;line-height:1.6;margin:0 0 24px}.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.calendar-top strong{font-size:1rem;text-transform:capitalize}.cal-arrow{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--gold2);cursor:pointer;font-size:1.2rem}.cal-arrow:hover{background:rgba(215,173,96,.12)}.weekdays,.days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;text-align:center}.weekdays{font-size:.72rem;color:#928a7d;margin-bottom:8px}.day{aspect-ratio:1;border:1px solid transparent;background:#1a1916;color:#eee5d5;border-radius:11px;cursor:pointer;font-size:.88rem;transition:.2s}.day:hover:not(:disabled){border-color:var(--gold);transform:translateY(-2px)}.day:disabled{opacity:.22;cursor:not-allowed}.day.selected{background:linear-gradient(135deg,#f3d79a,#bd873b);color:#17110a;font-weight:900}.day.today{border-color:var(--gold)}.day.empty{visibility:hidden}.legend{display:flex;gap:15px;color:var(--muted);font-size:.75rem;margin:15px 0 24px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:5px}.field-label{display:block;font-size:.82rem;color:#e5d9c5;font-weight:700;margin:18px 0 8px}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.slot{border:1px solid var(--line);background:#1a1916;color:#e9dfce;padding:11px 6px;border-radius:10px;cursor:pointer}.slot:hover:not(:disabled),.slot.selected{border-color:var(--gold);background:rgba(215,173,96,.15);color:var(--gold2)}.slot:disabled{opacity:.25;text-decoration:line-through;cursor:not-allowed}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.field{width:100%;padding:13px 14px;border-radius:11px;border:1px solid #393329;background:#0c0c0b;color:white;font:inherit;outline:none}.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(215,173,96,.1)}select.field option{background:#111}.full{grid-column:1/-1}.note{font-size:.75rem;line-height:1.6;color:#91897d;margin-top:14px}.submit{width:100%;margin-top:20px}.info-card{position:sticky;top:98px;background:linear-gradient(145deg,#191711,#100f0d)}.info-card .big{font:500 2.5rem Georgia,serif;color:var(--gold2);margin:12px 0}.info-row{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}.info-row:last-of-type{border-bottom:0}.info-ico{width:43px;height:43px;flex-shrink:0;display:grid;place-items:center;background:#292216;border-radius:13px}.info-row strong{display:block;margin-bottom:5px}.info-row span{font-size:.88rem;color:var(--muted);line-height:1.5}.callout{margin-top:24px;padding:17px;border:1px dashed rgba(215,173,96,.4);border-radius:15px;color:#d6c6a7;font-size:.88rem;line-height:1.6}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.step{text-align:center;padding:10px 18px}.step-num{margin:0 auto 18px;width:58px;height:58px;border-radius:50%;border:1px solid var(--gold);color:var(--gold2);display:grid;place-items:center;font:1.6rem Georgia,serif}.step h3{margin:0 0 8px}.step p{color:var(--muted);font-size:.9rem;line-height:1.7}.cta{padding:0 0 85px}.cta-inner{position:relative;overflow:hidden;border-radius:26px;border:1px solid var(--line);padding:clamp(28px,6vw,60px);text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(215,173,96,.15),transparent 65%),#12110f}.cta-inner h2{font:500 clamp(2.3rem,5vw,4rem) Georgia,serif;margin:12px 0}.cta-inner p{color:var(--muted);margin-bottom:25px}.cta-inner .btn{margin:5px}.footer{border-top:1px solid var(--line);padding:27px 0;color:#8e877c;font-size:.8rem}.footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.mobile-book{display:none;position:fixed;bottom:14px;left:14px;right:14px;z-index:25;box-shadow:0 8px 35px #000b}.toast{position:fixed;right:20px;bottom:20px;z-index:50;background:#191710;border:1px solid var(--gold);color:#f5e3bd;padding:16px 20px;border-radius:14px;box-shadow:0 10px 40px #0008;max-width:360px;display:none}.toast.show{display:block;animation:rise .3s both}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}@keyframes floatIn{from{opacity:0;transform:translateY(25px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}@keyframes twinkle{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}.reveal.visible{opacity:1;transform:translateY(0)}
+@media(max-width:850px){.navlinks{gap:13px}.navlinks a:not(.btn){display:none}.hero{grid-template-columns:1fr;gap:30px;padding-top:50px;text-align:center}.hero-copy p{margin-inline:auto}.hero-actions,.proof{justify-content:center}.hero-art{max-width:440px;width:90%;margin:auto}.poster-frame{height:500px;}.services{grid-template-columns:1fr 1fr}.booking-layout{grid-template-columns:1fr}.info-card{position:static}.steps{grid-template-columns:1fr}.step{max-width:420px;margin:auto}}
+@media(max-width:560px){.nav{height:66px}.nav .btn{padding:11px 13px;font-size:.8rem}.brand{font-size:.9rem}.brand-mark{width:35px;height:35px}.hero{min-height:auto;padding:54px 0 50px}.hero h1{font-size:3.6rem}.hero p{font-size:1rem}.proof{gap:15px}.proof strong{font-size:1rem}.proof small{font-size:.7rem}.services{grid-template-columns:1fr}.service{padding:23px}.section-head{margin-bottom:28px}.booking-card,.info-card{padding:20px 16px}.day{border-radius:8px;font-size:.8rem}.weekdays,.days{gap:4px}.slots{grid-template-columns:repeat(3,1fr)}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.mobile-book{display:flex}.footer{padding-bottom:85px}.footer .wrap{justify-content:center;text-align:center}.orbit{width:83px;height:83px;right:-4px;bottom:38px;font-size:.56rem}.orbit b{font-size:1.2rem}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+<a class="brand" href="#inicio" aria-label="Harry Barber inicio"><span class="brand-mark">H</span><span>HARRY <span class="gold">BARBER</span><small>TE MIRO Y TE PELO</small></span></a>
+<nav class="navlinks"><a href="#servicios">Servicios</a><a href="#como-funciona">Cómo funciona</a><a class="btn" href="#reservar">✦ Pedir cita</a></nav>
+</div></header>
+<main>
+<section class="wrap hero" id="inicio">
+<div class="hero-copy"><span class="eyebrow">Barbería premium a domicilio</span><h1>Tu estilo.<span>Mi misión.</span></h1><p>El auténtico cuidado de barbería, sin salir de casa. Tú eliges el día, la hora y el lugar. Yo llevo la experiencia hasta tu puerta.</p><div class="hero-actions"><a class="btn" href="#reservar">Reservar mi cita <span>↗</span></a><a class="btn btn-outline" href="tel:+34630437129">☎ 630 43 71 29</a></div><div class="proof"><div><strong>✦ A domicilio</strong><small>Voy donde estés</small></div><div><strong>✦ A tu medida</strong><small>Trato personal</small></div><div><strong>✦ Sin esperas</strong><small>Reserva tu hora</small></div></div></div>
+<div class="hero-art">
+    <span class="spark one">✦</span><span class="spark two">✧</span>
+    <div class="poster-frame">
+        <div class="carousel-inner" id="heroCarousel">
+            <!-- 1. Logo (Asegúrate de tenerlo en static/logo.jpg) -->
+            <img src="/static/logo.jpg" class="active" alt="Logo Harry Barber" style="object-fit: contain; background-color: #090909; padding: 20px;">
+            
+            <!-- 2 a 7. Fotos de barbería -->
+            <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=600&auto=format&fit=crop" alt="Corte de pelo">
+            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?q=80&w=600&auto=format&fit=crop" alt="Barbería a domicilio">
+            <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=600&auto=format&fit=crop" alt="Detalle de máquina de cortar">
+            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=600&auto=format&fit=crop" alt="Barbero trabajando">
+            <img src="https://images.unsplash.com/photo-1618077360395-f3068be8e001?q=80&w=600&auto=format&fit=crop" alt="Estilo de barba">
+            <img src="https://images.unsplash.com/photo-1593702288056-7927b442d0fa?q=80&w=600&auto=format&fit=crop" alt="Navaja y afeitado">
+        </div>
+    </div>
+    <div class="orbit"><b>✂</b>ESTILO<br>HASTA TU PUERTA</div>
+</div>
+</section>
+<section id="servicios"><div class="wrap"><div class="section-head reveal"><span class="eyebrow">Elige tu estilo</span><h2>Un buen corte lo cambia todo.</h2><p>Cuéntame qué necesitas y preparo la experiencia para ti. Los precios se pueden acordar directamente al confirmar la cita.</p></div><div class="services">
+<article class="service reveal"><div class="service-icon">✂️</div><h3>Corte de pelo</h3><p>Clásico, moderno, degradado o ese estilo que tienes en mente.</p><div class="price">A consultar <small>· según servicio</small></div></article>
+<article class="service reveal"><div class="service-icon">🪒</div><h3>Arreglo de barba</h3><p>Perfilado y cuidado para conseguir un acabado limpio y definido.</p><div class="price">A consultar <small>· según servicio</small></div></article>
+<article class="service reveal"><div class="service-icon">♛</div><h3>Pack completo</h3><p>Pelo y barba en una misma visita. Ponte cómodo y disfruta.</p><div class="price">A consultar <small>· según servicio</small></div></article>
+</div></div></section>
+<section id="reservar" class="booking-section"><div class="wrap"><div class="section-head reveal"><span class="eyebrow">Tu próxima cita</span><h2>Reserva en unos pasos.</h2><p>Selecciona un día y una hora, deja tus datos y envía la solicitud. Te confirmaré personalmente la disponibilidad.</p></div>
+<div class="booking-layout"><div class="booking-card reveal"><h3>Agenda tu visita</h3><p class="sub">Selecciona la fecha que mejor te venga.</p>
+<div class="calendar-top"><button class="cal-arrow" id="prevMonth" aria-label="Mes anterior">‹</button><strong id="monthLabel">Mes año</strong><button class="cal-arrow" id="nextMonth" aria-label="Mes siguiente">›</button></div>
+<div class="weekdays"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div><div class="days" id="calendarDays" aria-label="Calendario de citas"></div>
+<div class="legend"><span><i class="dot"></i>Fecha seleccionada</span><span>Las fechas pasadas no están disponibles</span></div>
+<label class="field-label">Hora preferida</label><div class="slots" id="timeSlots"></div>
+<form id="bookingForm"><div class="form-grid">
+<div><label class="field-label" for="name">Tu nombre *</label><input class="field" id="name" name="name" autocomplete="name" required placeholder="¿Cómo te llamas?"></div>
+<div><label class="field-label" for="phone">Tu teléfono *</label><input class="field" id="phone" name="phone" autocomplete="tel" inputmode="tel" required placeholder="Tu número de contacto"></div>
+<div class="full"><label class="field-label" for="service">¿Qué necesitas? *</label><select class="field" id="service" name="service" required><option value="">Selecciona un servicio</option><option>Corte de pelo</option><option>Arreglo de barba</option><option>Corte + barba</option><option>Otro / consultar</option></select></div>
+<div class="full"><label class="field-label" for="address">Dirección del servicio *</label><input class="field" id="address" name="address" required autocomplete="street-address" placeholder="Calle, número, localidad"></div>
+<div class="full"><label class="field-label" for="notes">Detalles adicionales (opcional)</label><textarea class="field" id="notes" name="notes" rows="3" placeholder="Indicaciones, estilo que buscas…"></textarea></div>
+</div><button class="btn submit" type="submit">Solicitar cita ↗</button><p class="note">Al enviar, tu solicitud se guardará en nuestra agenda. Harry te contactará para confirmar la disponibilidad.</p></form>
+</div>
+<aside class="info-card reveal"><span class="eyebrow">A tu servicio</span><h3>La barbería viene a ti.</h3><div class="big">Sin prisas.<br>Con estilo.</div><div class="info-row"><div class="info-ico">⌖</div><div><strong>Servicio a domicilio</strong><span>Indica tu dirección para consultar si tu zona está cubierta.</span></div></div><div class="info-row"><div class="info-ico">◷</div><div><strong>Horario flexible</strong><span>Elige tu franja preferida en el calendario. La disponibilidad se confirma personalmente.</span></div></div><div class="info-row"><div class="info-ico">☎</div><div><strong>¿Prefieres llamar?</strong><span><a class="gold" href="tel:+34630437129">630 43 71 29</a></span></div></div><div class="callout">✦ <strong>Consejo:</strong> si necesitas una hora concreta o una cita urgente, llámame y lo vemos.</div></aside>
+</div></div></section>
+<section id="como-funciona"><div class="wrap"><div class="section-head reveal"><span class="eyebrow">Fácil y cómodo</span><h2>¿Cómo funciona?</h2><p>Tu próxima puesta a punto está a solo unos clics.</p></div><div class="steps"><div class="step reveal"><div class="step-num">01</div><h3>Elige día y hora</h3><p>Usa el calendario para indicar cuándo te gustaría recibir el servicio.</p></div><div class="step reveal"><div class="step-num">02</div><h3>Déjame tus datos</h3><p>Indica el servicio, tu contacto y dónde quieres que vaya.</p></div><div class="step reveal"><div class="step-num">03</div><h3>Confirmación</h3><p>Recibirás una llamada o mensaje de Harry para confirmar tu cita.</p></div></div></div></section>
+<section class="cta"><div class="wrap"><div class="cta-inner reveal"><span class="eyebrow">¿Listo para el cambio?</span><h2>Te miro y te pelo.</h2><p>Buen estilo, trato cercano y comodidad en tu propia casa.</p><a class="btn" href="#reservar">✂ Reservar ahora</a><a class="btn btn-outline" href="https://wa.me/34630437129" target="_blank" rel="noopener">Hablar por WhatsApp ↗</a></div></div></section>
+</main>
+<footer class="footer"><div class="wrap"><span>© <span id="year"></span> Harry Barber · Te miro y te pelo</span><span>Peluquería a domicilio · <a href="tel:+34630437129">630 43 71 29</a></span></div></footer>
+<a class="btn mobile-book" href="#reservar">✂ Reservar cita</a><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const now=new Date(); let viewYear=now.getFullYear(),viewMonth=now.getMonth(),selectedDate='',selectedTime='';
+let horasOcupadas = []; 
+
+const daysEl=document.getElementById('calendarDays'), monthLabel=document.getElementById('monthLabel'), slotsEl=document.getElementById('timeSlots');
+const times=['09:00','10:00','11:00','12:00','16:00','17:00','18:00','19:00'];
+const pad=n=>String(n).padStart(2,'0');
+const keyDate=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const prettyDate=s=>{if(!s)return 'Sin seleccionar';const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});};
+
+// LÓGICA DEL CARRUSEL FADE + ZOOM (7 IMÁGENES)
+const carouselImages = document.querySelectorAll('#heroCarousel img');
+let currentImgIndex = 0;
+setInterval(() => {
+    carouselImages[currentImgIndex].classList.remove('active');
+    currentImgIndex = (currentImgIndex + 1) % carouselImages.length;
+    carouselImages[currentImgIndex].classList.add('active');
+}, 6000); // Cambia cada 6 segundos
+
+async function cargarHorasOcupadas() {
+    try {
+        const response = await fetch('/api/citas-ocupadas');
+        horasOcupadas = await response.json();
+        renderTimes(); 
+    } catch (error) {
+        console.error("Error cargando horas:", error);
+    }
+}
+
+function renderCalendar(){
+  daysEl.innerHTML='';const first=new Date(viewYear,viewMonth,1),last=new Date(viewYear,viewMonth+1,0);
+  monthLabel.textContent=first.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+  let offset=(first.getDay()+6)%7;
+  for(let i=0;i<offset;i++){const e=document.createElement('span');e.className='day empty';daysEl.append(e);}
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(viewYear,viewMonth,d),str=keyDate(date),b=document.createElement('button');b.type='button';b.className='day';b.textContent=d;
+    const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    if(date<today)b.disabled=true;
+    if(str===keyDate(now))b.classList.add('today');
+    if(str===selectedDate)b.classList.add('selected');
+    b.setAttribute('aria-label',prettyDate(str));b.setAttribute('aria-pressed',str===selectedDate?'true':'false');
+    b.addEventListener('click',()=>{selectedDate=str;selectedTime='';renderCalendar();renderTimes();});daysEl.append(b);
+  }
+}
+
+function renderTimes(){
+  slotsEl.innerHTML='';
+  times.forEach(t=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='slot'+(t===selectedTime?' selected':''); 
+    b.textContent=t;
+    b.setAttribute('aria-pressed',t===selectedTime?'true':'false');
+    
+    const estaOcupada = horasOcupadas.some(cita => cita.fecha === selectedDate && cita.hora === t);
+    
+    if (estaOcupada) {
+        b.disabled = true;
+        b.title = "Hora no disponible";
+    } else {
+        b.addEventListener('click',()=>{selectedTime=t;renderTimes();});
+    }
+    slotsEl.append(b);
+  });
+}
+
+document.getElementById('prevMonth').addEventListener('click',()=>{const d=new Date(viewYear,viewMonth-1,1);const min=new Date(now.getFullYear(),now.getMonth(),1);if(d>=min){viewYear=d.getFullYear();viewMonth=d.getMonth();renderCalendar();}});
+document.getElementById('nextMonth').addEventListener('click',()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}renderCalendar();});
+document.getElementById('year').textContent=new Date().getFullYear();
+
+document.getElementById('bookingForm').addEventListener('submit', async (e)=>{
+ e.preventDefault();
+ if(!selectedDate){showToast('Selecciona primero un día en el calendario.');return;}
+ if(!selectedTime){showToast('Elige la hora que prefieras.');return;}
+ 
+ const data=new FormData(e.currentTarget);
+ const btnSubmit = e.target.querySelector('button[type="submit"]');
+ 
+ const datosReserva = {
+     fecha: selectedDate, hora: selectedTime, nombre: data.get('name'),
+     telefono: data.get('phone'), servicio: data.get('service'),
+     direccion: data.get('address'), notas: data.get('notes')
+ };
+
+ try {
+     btnSubmit.textContent = "Enviando solicitud...";
+     btnSubmit.disabled = true;
+     
+     const response = await fetch('/api/reservar', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(datosReserva)
+     });
+
+     if(response.ok) {
+         showToast('¡Cita solicitada con éxito! Harry te contactará para confirmar.');
+         
+         await cargarHorasOcupadas(); 
+         
+         e.target.reset(); selectedDate=''; selectedTime='';
+         renderCalendar(); renderTimes();
+     } else {
+         showToast('Hubo un error. Inténtalo de nuevo.');
+     }
+ } catch (error) {
+     showToast('Error de conexión.');
+ } finally {
+     btnSubmit.textContent = "Solicitar cita ↗";
+     btnSubmit.disabled = false;
+ }
+});
+
+function showToast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3600);}
+
+renderCalendar();
+cargarHorasOcupadas(); 
+
+const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target);}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+</script>
+</body></html>
