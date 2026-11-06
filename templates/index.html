@@ -197,7 +197,14 @@ document.getElementById('bookingForm').addEventListener('submit', async (e)=>{
          e.target.reset(); selectedDate=''; selectedTime='';
          renderCalendar(); renderTimes();
      } else {
-         showToast('Hubo un error. Inténtalo de nuevo.');
+         // SI EL SERVIDOR DICE QUE ESTÁ OCUPADA
+         const errorData = await response.json();
+         showToast(errorData.message || 'Hubo un error. Inténtalo de nuevo.');
+         
+         // Refrescamos las horas ocupadas para que la hora que acaban de pillar salga en rojo/deshabilitada
+         await cargarHorasOcupadas(); 
+         selectedTime = ''; 
+         renderTimes(); 
      }
  } catch (error) {
      showToast('Error de conexión.');
