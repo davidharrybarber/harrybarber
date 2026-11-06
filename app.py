@@ -41,11 +41,11 @@ def citas_ocupadas():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # Citas normales
+    # 1. OBTENER LAS CITAS NORMALES (El fallo estaba aquí, se nos había olvidado esta línea)
     c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
     citas = [{"fecha": row[0], "hora": row[1]} for row in c.fetchall()]
     
-    # Bloqueos
+    # 2. OBTENER LOS BLOQUEOS MANUALES DEL ADMIN
     c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
     bloqueos_raw = c.fetchall()
     conn.close()
@@ -63,6 +63,7 @@ def citas_ocupadas():
                 if h_inicio <= h < h_fin:
                     bloqueos_procesados.append({"fecha": fecha, "hora": h})
 
+    # 3. UNIMOS AMBAS LISTAS Y LAS ENVIAMOS A LA WEB
     return jsonify(citas + bloqueos_procesados)
 
 @app.route('/api/reservar', methods=['POST'])
@@ -71,7 +72,6 @@ def reservar():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # COMPROBACIÓN EN EL SERVIDOR: Si la hora ya está ocupada, rechazamos
     c.execute("SELECT id FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelada'", 
               (datos['fecha'], datos['hora']))
     if c.fetchone():
