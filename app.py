@@ -17,7 +17,6 @@ def init_db():
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora TEXT, cliente TEXT, telefono TEXT, 
                   servicio TEXT, direccion TEXT, estado TEXT)''')
-    # Tabla de bloqueos (ahora acepta rangos y días completos)
     c.execute('''CREATE TABLE IF NOT EXISTS bloqueos
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora_inicio TEXT, hora_fin TEXT, dia_completo INTEGER)''')
@@ -61,7 +60,6 @@ def citas_ocupadas():
                 bloqueos_procesados.append({"fecha": fecha, "hora": h})
         else:
             for h in horas_estandar:
-                # Comprobamos si la hora está dentro del rango bloqueado
                 if h_inicio <= h < h_fin:
                     bloqueos_procesados.append({"fecha": fecha, "hora": h})
 
@@ -72,6 +70,14 @@ def reservar():
     datos = request.json
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
+    
+    # COMPROBACIÓN EN EL SERVIDOR: Si la hora ya está ocupada, rechazamos
+    c.execute("SELECT id FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelada'", 
+              (datos['fecha'], datos['hora']))
+    if c.fetchone():
+        conn.close()
+        return jsonify({"status": "error", "message": "Esta hora acaba de ser reservada por otra persona."}), 400
+
     c.execute("INSERT INTO citas (fecha, hora, cliente, telefono, servicio, direccion, estado) VALUES (?, ?, ?, ?, ?, ?, 'pendiente')",
               (datos['fecha'], datos['hora'], datos['nombre'], datos['telefono'], datos['servicio'], datos['direccion']))
     conn.commit()
