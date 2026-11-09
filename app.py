@@ -41,11 +41,11 @@ def citas_ocupadas():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # 1. OBTENER LAS CITAS NORMALES (El fallo estaba aquí, se nos había olvidado esta línea)
-    c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
+    # 1. CITAS NORMALES (Forzamos a que solo coja los primeros 5 caracteres, ej: "19:00")
+    c.execute("SELECT fecha, substr(hora, 1, 5) FROM citas WHERE estado != 'cancelada'")
     citas = [{"fecha": row[0], "hora": row[1]} for row in c.fetchall()]
     
-    # 2. OBTENER LOS BLOQUEOS MANUALES DEL ADMIN
+    # 2. BLOQUEOS MANUALES
     c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
     bloqueos_raw = c.fetchall()
     conn.close()
@@ -55,6 +55,10 @@ def citas_ocupadas():
     
     for b in bloqueos_raw:
         fecha, h_inicio, h_fin, dia_completo = b
+        # También limpiamos las horas de los bloqueos
+        h_inicio = h_inicio[:5]
+        h_fin = h_fin[:5]
+        
         if dia_completo == 1:
             for h in horas_estandar:
                 bloqueos_procesados.append({"fecha": fecha, "hora": h})
@@ -63,23 +67,27 @@ def citas_ocupadas():
                 if h_inicio <= h < h_fin:
                     bloqueos_procesados.append({"fecha": fecha, "hora": h})
 
-    # 3. UNIMOS AMBAS LISTAS Y LAS ENVIAMOS A LA WEB
+    # 3. UNIR Y ENVIAR
     return jsonify(citas + bloqueos_procesados)
 
 @app.route('/api/reservar', methods=['POST'])
 def reservar():
     datos = request.json
+    # Limpiamos la hora que llega por si acaso
+    hora_limpia = datos['hora'][:5]
+    
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    c.execute("SELECT id FROM citas WHERE fecha = ? AND hora = ? AND estado != 'cancelada'", 
-              (datos['fecha'], datos['hora']))
+    # COMPROBACIÓN EN EL SERVIDOR
+    c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", 
+              (datos['fecha'], hora_limpia))
     if c.fetchone():
         conn.close()
         return jsonify({"status": "error", "message": "Esta hora acaba de ser reservada por otra persona."}), 400
 
     c.execute("INSERT INTO citas (fecha, hora, cliente, telefono, servicio, direccion, estado) VALUES (?, ?, ?, ?, ?, ?, 'pendiente')",
-              (datos['fecha'], datos['hora'], datos['nombre'], datos['telefono'], datos['servicio'], datos['direccion']))
+              (datos['fecha'], hora_limpia, datos['nombre'], datos['telefono'], datos['servicio'], datos['direccion']))
     conn.commit()
     conn.close()
     return jsonify({"status": "ok"})
@@ -183,7 +191,6 @@ def admin():
         </div>
     '''
 
-    # SECCIÓN URGENTE
     html += '<div class="urgentes-title">🔥 Citas Próximas (Hoy, mañana y pasado)</div>'
     if len(proximas_citas) == 0:
         html += '<p style="color:#aaa; font-size:1.2rem;">No tienes citas para los próximos 3 días.</p>'
@@ -198,7 +205,7 @@ def admin():
             html += f'''
             <div class="cita-urgente">
                 <div class="info">
-                    <b>{fecha_bonita}</b> a las <b>{c[2]}</b><br>
+                    <b>{fecha_bonita}</b> a las <b>{c[2][:5]}</b><br>
                     👤 {c[3]} | 📞 {c[4]}<br>
                     ✂️ {c[5]} | 📍 {c[6]}
                 </div>
@@ -210,7 +217,6 @@ def admin():
             html += f"<a class='btn btn-delete' href='/admin/borrar/{c[0]}' onclick=\"return confirm('¿Borrar cita?');\">🗑️</a>"
             html += '</div></div>'
 
-    # HISTORIAL
     html += '<div class="tabla-title">📋 Historial Completo de Citas</div>'
     if len(todas_citas) == 0:
         html += '<p style="color:#aaa; font-size:1.2rem;">Aún no hay ninguna cita registrada.</p>'
@@ -218,7 +224,7 @@ def admin():
         html += '<div class="table-container"><table><tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Teléfono</th><th>Servicio</th><th>Dirección</th><th>Estado</th><th>Acciones</th></tr>'
         for c in todas_citas:
             color_estado = "#10b981" if c[7] == 'confirmada' else ("#ef4444" if c[7] == 'cancelada' else "#f59e0b")
-            html += f"<tr><td><b>{c[1]}</b></td><td><b>{c[2]}</b></td><td>{c[3]}</td><td>{c[4]}</td><td>{c[5]}</td><td>{c[6]}</td>"
+            html += f"<tr><td><b>{c[1]}</b></td><td><b>{c[2][:5]}</b></td><td>{c[3]}</td><td>{c[4]}</td><td>{c[5]}</td><td>{c[6]}</td>"
             html += f"<td style='color:{color_estado}; font-weight:bold;'>{c[7].upper()}</td><td>"
             if c[7] == 'pendiente':
                 html += f"<a class='btn btn-confirm' href='/admin/estado/{c[0]}/confirmada'>Confirmar</a>"
@@ -227,7 +233,6 @@ def admin():
             html += f"<a class='btn btn-delete' href='/admin/borrar/{c[0]}' onclick=\"return confirm('¿Borrar cita?');\">🗑️</a></td></tr>"
         html += '</table></div>'
 
-    # --- SECCIÓN BLOQUEO MEJORADA ---
     html += '''
     <div class="add-form" style="border-color: #ef4444; background-color: #1a0f0f;">
         <h3 style="color: #ef4444;">🚫 Gestión de Bloqueos (Vacaciones / Descanso)</h3>
@@ -275,11 +280,10 @@ def admin():
         html += '<div class="table-container"><table><tr><th>Fecha</th><th>Tipo</th><th>Horario</th><th>Acción</th></tr>'
         for b in bloqueos:
             tipo = "Día Completo" if b[4] == 1 else "Rango de horas"
-            horario = "Todo el día" if b[4] == 1 else f"{b[2]} a {b[3]}"
+            horario = "Todo el día" if b[4] == 1 else f"{b[2][:5]} a {b[3][:5]}"
             html += f"<tr><td>{b[1]}</td><td>{tipo}</td><td>{horario}</td><td><a class='btn btn-confirm' href='/admin/desbloquear/{b[0]}'>Desbloquear</a></td></tr>"
         html += '</table></div>'
 
-    # FORMULARIO MANUAL
     html += '''
         <div class="add-form">
             <h3>Añadir cita manual</h3>
@@ -325,7 +329,7 @@ def borrar_cita(id):
 @login_required
 def añadir_manual():
     fecha = request.form.get('fecha')
-    hora = request.form.get('hora')
+    hora = request.form.get('hora')[:5] # Limpiamos la hora manual también
     cliente = request.form.get('cliente')
     telefono = request.form.get('telefono')
     servicio = request.form.get('servicio')
@@ -351,8 +355,8 @@ def bloquear_hora():
     if tipo == 'dia_completo':
         c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, '00:00', '23:59', 1)", (fecha,))
     else:
-        h_inicio = request.form.get('hora_inicio')
-        h_fin = request.form.get('hora_fin')
+        h_inicio = request.form.get('hora_inicio')[:5]
+        h_fin = request.form.get('hora_fin')[:5]
         c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, ?, ?, 0)", (fecha, h_inicio, h_fin))
         
     conn.commit()
