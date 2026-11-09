@@ -13,12 +13,10 @@ ADMIN_PASSWORD = "HarryAdmin2026!"
 def init_db():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
-    # Tabla de citas
     c.execute('''CREATE TABLE IF NOT EXISTS citas
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora TEXT, cliente TEXT, telefono TEXT, 
                   servicio TEXT, direccion TEXT, estado TEXT)''')
-    # Tabla de bloqueos (con rangos)
     c.execute('''CREATE TABLE IF NOT EXISTS bloqueos
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora_inicio TEXT, hora_fin TEXT, dia_completo INTEGER)''')
@@ -49,7 +47,6 @@ def citas_ocupadas():
     # 1. CITAS
     c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
     for cita in c.fetchall():
-        # Limpiamos la hora por si tuviera segundos
         hora_limpia = str(cita[1]).strip()[:5]
         ocupadas.append({"fecha": cita[0], "hora": hora_limpia})
         
@@ -80,25 +77,26 @@ def reservar():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # Verificación estricta: ¿Está la hora en la tabla de citas?
+    # Verificación 1: ¿Ya existe la cita?
     c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", (datos['fecha'], hora_limpia))
     if c.fetchone():
         conn.close()
         return jsonify({"status": "error", "message": "Esta hora ya está ocupada por otro cliente."}), 400
 
-    # Verificación estricta: ¿Está la hora bloqueada por el admin?
+    # Verificación 2: ¿Está el día bloqueado?
     c.execute("SELECT id FROM bloqueos WHERE fecha = ? AND dia_completo = 1", (datos['fecha'],))
     if c.fetchone():
         conn.close()
         return jsonify({"status": "error", "message": "Este día está bloqueado (Descanso)."}), 400
         
+    # Verificación 3: ¿Está la hora dentro de un rango bloqueado?
     c.execute("SELECT hora_inicio, hora_fin FROM bloqueos WHERE fecha = ? AND dia_completo = 0", (datos['fecha'],))
     for bloqueo in c.fetchall():
         if bloqueo[0] <= hora_limpia < bloqueo[1]:
             conn.close()
             return jsonify({"status": "error", "message": "Esta hora está fuera de servicio."}), 400
 
-    # Si pasa todas las pruebas, se guarda
+    # Guardar en Base de Datos
     c.execute("INSERT INTO citas (fecha, hora, cliente, telefono, servicio, direccion, estado) VALUES (?, ?, ?, ?, ?, ?, 'pendiente')",
               (datos['fecha'], hora_limpia, datos['nombre'], datos['telefono'], datos['servicio'], datos['direccion']))
     conn.commit()
