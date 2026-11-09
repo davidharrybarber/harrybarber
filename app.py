@@ -41,32 +41,41 @@ def citas_ocupadas():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # Limpiamos las horas de las citas para que siempre sean HH:MM
-    c.execute("SELECT fecha, substr(hora, 1, 5) FROM citas WHERE estado != 'cancelada'")
-    citas = [{"fecha": row[0], "hora": row[1]} for row in c.fetchall()]
+    # 1. Buscamos todas las citas que NO estén canceladas
+    c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
+    citas_raw = c.fetchall()
     
+    # 2. Buscamos los bloqueos
     c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
     bloqueos_raw = c.fetchall()
     conn.close()
     
+    ocupadas = []
     horas_estandar = ['09:00','10:00','11:00','12:00','16:00','17:00','18:00','19:00']
-    bloqueos_procesados = []
     
+    # Procesar citas
+    for cita in citas_raw:
+        fecha = cita[0]
+        # Limpiamos la hora (por si acaso tiene segundos, ej: "19:00:00" -> "19:00")
+        hora_limpia = str(cita[1])[:5] 
+        ocupadas.append({"fecha": fecha, "hora": hora_limpia})
+        
+    # Procesar bloqueos
     for b in bloqueos_raw:
-        fecha, h_inicio, h_fin, dia_completo = b
-        # Limpiamos por si acaso hay datos viejos con segundos
-        h_inicio_limpia = h_inicio[:5] if h_inicio else "00:00"
-        h_fin_limpia = h_fin[:5] if h_fin else "23:59"
+        fecha = b[0]
+        h_inicio = str(b[1])[:5] if b[1] else "00:00"
+        h_fin = str(b[2])[:5] if b[2] else "23:59"
+        dia_completo = b[3]
         
         if dia_completo == 1:
             for h in horas_estandar:
-                bloqueos_procesados.append({"fecha": fecha, "hora": h})
+                ocupadas.append({"fecha": fecha, "hora": h})
         else:
             for h in horas_estandar:
-                if h_inicio_limpia <= h < h_fin_limpia:
-                    bloqueos_procesados.append({"fecha": fecha, "hora": h})
+                if h_inicio <= h < h_fin:
+                    ocupadas.append({"fecha": fecha, "hora": h})
 
-    return jsonify(citas + bloqueos_procesados)
+    return jsonify(ocupadas)
 
 @app.route('/api/reservar', methods=['POST'])
 def reservar():
@@ -76,6 +85,7 @@ def reservar():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
+    # Comprobación en el servidor por si dos personas reservan a la vez
     c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", 
               (datos['fecha'], hora_limpia))
     if c.fetchone():
@@ -202,7 +212,7 @@ def admin():
             html += f'''
             <div class="cita-urgente">
                 <div class="info">
-                    <b>{fecha_bonita}</b> a las <b>{c[2][:5]}</b><br>
+                    <b>{fecha_bonita}</b> a las <b>{str(c[2])[:5]}</b><br>
                     👤 {c[3]} | 📞 {c[4]}<br>
                     ✂️ {c[5]} | 📍 {c[6]}
                 </div>
@@ -222,7 +232,7 @@ def admin():
         html += '<div class="table-container"><table><tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Teléfono</th><th>Servicio</th><th>Dirección</th><th>Estado</th><th>Acciones</th></tr>'
         for c in todas_citas:
             color_estado = "#10b981" if c[7] == 'confirmada' else ("#ef4444" if c[7] == 'cancelada' else "#f59e0b")
-            html += f"<tr><td><b>{c[1]}</b></td><td><b>{c[2][:5]}</b></td><td>{c[3]}</td><td>{c[4]}</td><td>{c[5]}</td><td>{c[6]}</td>"
+            html += f"<tr><td><b>{c[1]}</b></td><td><b>{str(c[2])[:5]}</b></td><td>{c[3]}</td><td>{c[4]}</td><td>{c[5]}</td><td>{c[6]}</td>"
             html += f"<td style='color:{color_estado}; font-weight:bold;'>{c[7].upper()}</td><td>"
             if c[7] == 'pendiente':
                 html += f"<a class='btn btn-confirm' href='/admin/estado/{c[0]}/confirmada'>Confirmar</a>"
@@ -279,12 +289,10 @@ def admin():
         html += '<div class="table-container"><table><tr><th>Fecha</th><th>Tipo</th><th>Horario</th><th>Acción</th></tr>'
         for b in bloqueos:
             tipo = "Día Completo" if b[4] == 1 else "Rango de horas"
-            h_ini = b[2][:5] if b[2] else ""
-            h_fi = b[3][:5] if b[3] else ""
-            horario = "Todo el día" if b[4] == 1 else f"{h_ini} a {h_fi}"
+            horario = "Todo el día" if b[4] == 1 else f"{str(b[2])[:5]} a {str(b[3])[:5]}"
             html += f"<tr><td>{b[1]}</td><td>{tipo}</td><td>{horario}</td><td><a class='btn btn-confirm' href='/admin/desbloquear/{b[0]}'>Desbloquear</a></td></tr>"
         html += '</table></div>'
-        # BOTÓN DE EMERGENCIA PARA LIMPIAR BLOQUEOS
+        # BOTÓN DE EMERGENCIA
         html += '<div style="text-align:center; margin-bottom:40px;"><a class="btn btn-cancel" href="/admin/limpiar_bloqueos" onclick="return confirm(\'¿Seguro que quieres borrar TODOS los bloqueos?\');">🗑️ Borrar todos los bloqueos</a></div>'
 
     # FORMULARIO MANUAL
@@ -381,7 +389,6 @@ def desbloquear_hora(id):
     conn.close()
     return redirect(url_for('admin'))
 
-# RUTA DE EMERGENCIA PARA LIMPIAR BLOQUEOS
 @app.route('/admin/limpiar_bloqueos')
 @login_required
 def limpiar_bloqueos():
