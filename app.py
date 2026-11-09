@@ -41,11 +41,10 @@ def citas_ocupadas():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # 1. CITAS NORMALES (Forzamos a que solo coja los primeros 5 caracteres, ej: "19:00")
+    # Limpiamos las horas de las citas para que siempre sean HH:MM
     c.execute("SELECT fecha, substr(hora, 1, 5) FROM citas WHERE estado != 'cancelada'")
     citas = [{"fecha": row[0], "hora": row[1]} for row in c.fetchall()]
     
-    # 2. BLOQUEOS MANUALES
     c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
     bloqueos_raw = c.fetchall()
     conn.close()
@@ -55,31 +54,28 @@ def citas_ocupadas():
     
     for b in bloqueos_raw:
         fecha, h_inicio, h_fin, dia_completo = b
-        # También limpiamos las horas de los bloqueos
-        h_inicio = h_inicio[:5]
-        h_fin = h_fin[:5]
+        # Limpiamos por si acaso hay datos viejos con segundos
+        h_inicio_limpia = h_inicio[:5] if h_inicio else "00:00"
+        h_fin_limpia = h_fin[:5] if h_fin else "23:59"
         
         if dia_completo == 1:
             for h in horas_estandar:
                 bloqueos_procesados.append({"fecha": fecha, "hora": h})
         else:
             for h in horas_estandar:
-                if h_inicio <= h < h_fin:
+                if h_inicio_limpia <= h < h_fin_limpia:
                     bloqueos_procesados.append({"fecha": fecha, "hora": h})
 
-    # 3. UNIR Y ENVIAR
     return jsonify(citas + bloqueos_procesados)
 
 @app.route('/api/reservar', methods=['POST'])
 def reservar():
     datos = request.json
-    # Limpiamos la hora que llega por si acaso
     hora_limpia = datos['hora'][:5]
     
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # COMPROBACIÓN EN EL SERVIDOR
     c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", 
               (datos['fecha'], hora_limpia))
     if c.fetchone():
@@ -141,7 +137,7 @@ def admin():
             .header { text-align: center; margin-bottom: 30px; }
             .header img { max-width: 220px; border-radius: 15px; border: 2px solid #d7ad60; }
             h1 { color: #d7ad60; margin-top: 15px; font-size: 2rem; }
-            .nav-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; }
+            .nav-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
             .nav-links a { color: #d7ad60; text-decoration: none; font-size: 1.1rem; border: 1px solid #d7ad60; padding: 10px 20px; border-radius: 8px; }
             .nav-links a:hover { background-color: #d7ad60; color: #000; }
             
@@ -158,7 +154,7 @@ def admin():
             td { padding: 15px; border-bottom: 1px solid #333; font-size: 1.1rem; }
             tr:hover { background-color: #1a1916; }
             
-            .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; margin: 2px; font-size: 1rem; text-align:center;}
+            .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; margin: 2px; font-size: 1rem; text-align:center; border: none; cursor: pointer;}
             .btn-confirm { background-color: #10b981; color: white; }
             .btn-cancel { background-color: #ef4444; color: white; }
             .btn-delete { background-color: #555; color: white; }
@@ -191,6 +187,7 @@ def admin():
         </div>
     '''
 
+    # SECCIÓN URGENTE
     html += '<div class="urgentes-title">🔥 Citas Próximas (Hoy, mañana y pasado)</div>'
     if len(proximas_citas) == 0:
         html += '<p style="color:#aaa; font-size:1.2rem;">No tienes citas para los próximos 3 días.</p>'
@@ -217,6 +214,7 @@ def admin():
             html += f"<a class='btn btn-delete' href='/admin/borrar/{c[0]}' onclick=\"return confirm('¿Borrar cita?');\">🗑️</a>"
             html += '</div></div>'
 
+    # HISTORIAL
     html += '<div class="tabla-title">📋 Historial Completo de Citas</div>'
     if len(todas_citas) == 0:
         html += '<p style="color:#aaa; font-size:1.2rem;">Aún no hay ninguna cita registrada.</p>'
@@ -233,6 +231,7 @@ def admin():
             html += f"<a class='btn btn-delete' href='/admin/borrar/{c[0]}' onclick=\"return confirm('¿Borrar cita?');\">🗑️</a></td></tr>"
         html += '</table></div>'
 
+    # --- SECCIÓN BLOQUEO ---
     html += '''
     <div class="add-form" style="border-color: #ef4444; background-color: #1a0f0f;">
         <h3 style="color: #ef4444;">🚫 Gestión de Bloqueos (Vacaciones / Descanso)</h3>
@@ -280,10 +279,15 @@ def admin():
         html += '<div class="table-container"><table><tr><th>Fecha</th><th>Tipo</th><th>Horario</th><th>Acción</th></tr>'
         for b in bloqueos:
             tipo = "Día Completo" if b[4] == 1 else "Rango de horas"
-            horario = "Todo el día" if b[4] == 1 else f"{b[2][:5]} a {b[3][:5]}"
+            h_ini = b[2][:5] if b[2] else ""
+            h_fi = b[3][:5] if b[3] else ""
+            horario = "Todo el día" if b[4] == 1 else f"{h_ini} a {h_fi}"
             html += f"<tr><td>{b[1]}</td><td>{tipo}</td><td>{horario}</td><td><a class='btn btn-confirm' href='/admin/desbloquear/{b[0]}'>Desbloquear</a></td></tr>"
         html += '</table></div>'
+        # BOTÓN DE EMERGENCIA PARA LIMPIAR BLOQUEOS
+        html += '<div style="text-align:center; margin-bottom:40px;"><a class="btn btn-cancel" href="/admin/limpiar_bloqueos" onclick="return confirm(\'¿Seguro que quieres borrar TODOS los bloqueos?\');">🗑️ Borrar todos los bloqueos</a></div>'
 
+    # FORMULARIO MANUAL
     html += '''
         <div class="add-form">
             <h3>Añadir cita manual</h3>
@@ -329,7 +333,7 @@ def borrar_cita(id):
 @login_required
 def añadir_manual():
     fecha = request.form.get('fecha')
-    hora = request.form.get('hora')[:5] # Limpiamos la hora manual también
+    hora = request.form.get('hora')[:5]
     cliente = request.form.get('cliente')
     telefono = request.form.get('telefono')
     servicio = request.form.get('servicio')
@@ -346,21 +350,25 @@ def añadir_manual():
 @app.route('/admin/bloquear', methods=['POST'])
 @login_required
 def bloquear_hora():
-    fecha = request.form.get('fecha')
-    tipo = request.form.get('tipo_bloqueo')
-    
-    conn = sqlite3.connect('citas.db')
-    c = conn.cursor()
-    
-    if tipo == 'dia_completo':
-        c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, '00:00', '23:59', 1)", (fecha,))
-    else:
-        h_inicio = request.form.get('hora_inicio')[:5]
-        h_fin = request.form.get('hora_fin')[:5]
-        c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, ?, ?, 0)", (fecha, h_inicio, h_fin))
+    try:
+        fecha = request.form.get('fecha')
+        tipo = request.form.get('tipo_bloqueo')
         
-    conn.commit()
-    conn.close()
+        conn = sqlite3.connect('citas.db')
+        c = conn.cursor()
+        
+        if tipo == 'dia_completo':
+            c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, '00:00', '23:59', 1)", (fecha,))
+        else:
+            h_inicio = request.form.get('hora_inicio', '')[:5]
+            h_fin = request.form.get('hora_fin', '')[:5]
+            c.execute("INSERT INTO bloqueos (fecha, hora_inicio, hora_fin, dia_completo) VALUES (?, ?, ?, 0)", (fecha, h_inicio, h_fin))
+            
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error al bloquear: {e}")
+    
     return redirect(url_for('admin'))
 
 @app.route('/admin/desbloquear/<int:id>')
@@ -369,6 +377,17 @@ def desbloquear_hora(id):
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     c.execute("DELETE FROM bloqueos WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
+# RUTA DE EMERGENCIA PARA LIMPIAR BLOQUEOS
+@app.route('/admin/limpiar_bloqueos')
+@login_required
+def limpiar_bloqueos():
+    conn = sqlite3.connect('citas.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM bloqueos")
     conn.commit()
     conn.close()
     return redirect(url_for('admin'))
