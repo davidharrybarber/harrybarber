@@ -13,10 +13,12 @@ ADMIN_PASSWORD = "HarryAdmin2026!"
 def init_db():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
+    # Tabla de citas
     c.execute('''CREATE TABLE IF NOT EXISTS citas
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora TEXT, cliente TEXT, telefono TEXT, 
                   servicio TEXT, direccion TEXT, estado TEXT)''')
+    # Tabla de bloqueos (con rangos)
     c.execute('''CREATE TABLE IF NOT EXISTS bloqueos
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   fecha TEXT, hora_inicio TEXT, hora_fin TEXT, dia_completo INTEGER)''')
@@ -41,30 +43,22 @@ def citas_ocupadas():
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # 1. Buscamos todas las citas que NO estén canceladas
-    c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
-    citas_raw = c.fetchall()
-    
-    # 2. Buscamos los bloqueos
-    c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
-    bloqueos_raw = c.fetchall()
-    conn.close()
-    
     ocupadas = []
     horas_estandar = ['09:00','10:00','11:00','12:00','16:00','17:00','18:00','19:00']
     
-    # Procesar citas
-    for cita in citas_raw:
-        fecha = cita[0]
-        # Limpiamos la hora (por si acaso tiene segundos, ej: "19:00:00" -> "19:00")
-        hora_limpia = str(cita[1])[:5] 
-        ocupadas.append({"fecha": fecha, "hora": hora_limpia})
+    # 1. CITAS
+    c.execute("SELECT fecha, hora FROM citas WHERE estado != 'cancelada'")
+    for cita in c.fetchall():
+        # Limpiamos la hora por si tuviera segundos
+        hora_limpia = str(cita[1]).strip()[:5]
+        ocupadas.append({"fecha": cita[0], "hora": hora_limpia})
         
-    # Procesar bloqueos
-    for b in bloqueos_raw:
+    # 2. BLOQUEOS
+    c.execute("SELECT fecha, hora_inicio, hora_fin, dia_completo FROM bloqueos")
+    for b in c.fetchall():
         fecha = b[0]
-        h_inicio = str(b[1])[:5] if b[1] else "00:00"
-        h_fin = str(b[2])[:5] if b[2] else "23:59"
+        h_inicio = str(b[1]).strip()[:5] if b[1] else "00:00"
+        h_fin = str(b[2]).strip()[:5] if b[2] else "23:59"
         dia_completo = b[3]
         
         if dia_completo == 1:
@@ -75,23 +69,36 @@ def citas_ocupadas():
                 if h_inicio <= h < h_fin:
                     ocupadas.append({"fecha": fecha, "hora": h})
 
+    conn.close()
     return jsonify(ocupadas)
 
 @app.route('/api/reservar', methods=['POST'])
 def reservar():
     datos = request.json
-    hora_limpia = datos['hora'][:5]
+    hora_limpia = str(datos['hora']).strip()[:5]
     
     conn = sqlite3.connect('citas.db')
     c = conn.cursor()
     
-    # Comprobación en el servidor por si dos personas reservan a la vez
-    c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", 
-              (datos['fecha'], hora_limpia))
+    # Verificación estricta: ¿Está la hora en la tabla de citas?
+    c.execute("SELECT id FROM citas WHERE fecha = ? AND substr(hora, 1, 5) = ? AND estado != 'cancelada'", (datos['fecha'], hora_limpia))
     if c.fetchone():
         conn.close()
-        return jsonify({"status": "error", "message": "Esta hora acaba de ser reservada por otra persona."}), 400
+        return jsonify({"status": "error", "message": "Esta hora ya está ocupada por otro cliente."}), 400
 
+    # Verificación estricta: ¿Está la hora bloqueada por el admin?
+    c.execute("SELECT id FROM bloqueos WHERE fecha = ? AND dia_completo = 1", (datos['fecha'],))
+    if c.fetchone():
+        conn.close()
+        return jsonify({"status": "error", "message": "Este día está bloqueado (Descanso)."}), 400
+        
+    c.execute("SELECT hora_inicio, hora_fin FROM bloqueos WHERE fecha = ? AND dia_completo = 0", (datos['fecha'],))
+    for bloqueo in c.fetchall():
+        if bloqueo[0] <= hora_limpia < bloqueo[1]:
+            conn.close()
+            return jsonify({"status": "error", "message": "Esta hora está fuera de servicio."}), 400
+
+    # Si pasa todas las pruebas, se guarda
     c.execute("INSERT INTO citas (fecha, hora, cliente, telefono, servicio, direccion, estado) VALUES (?, ?, ?, ?, ?, ?, 'pendiente')",
               (datos['fecha'], hora_limpia, datos['nombre'], datos['telefono'], datos['servicio'], datos['direccion']))
     conn.commit()
